@@ -31,11 +31,22 @@ const socketConnect = (server) => {
 
         socket.on('chats', async(): Promise<any> => {
             let userChats = await Chat.find({
-                participants: (socket as SocketUser).user,
+                participants: { $in: [(socket as SocketUser).user] },
             })
             .populate('participants', 'name email')
             .populate('messages.sender', 'name email')
+            .slice('messages', -1)
+            .sort({'messages.time': -1})
             socket.emit('chats', userChats)
+        })
+
+        socket.on('chat', async(data: { user: string }): Promise<any> => {
+            let userChat = await Chat.find({
+                participants: { $in: [data.user] }
+            })
+            .populate('participants', 'name email')
+            .populate('messages.sender', 'name email')
+            socket.emit('chats', userChat)
         })
         
         socket.on('chat message', async(data: { sender: string, receiver: string, text: string }): Promise<void> => {

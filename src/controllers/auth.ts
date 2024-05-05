@@ -3,14 +3,27 @@ import { IUser, User } from '../models/user.js'
 const secret = 'chatApp'
 import jwt from 'jsonwebtoken'
 
+
 const signUp = async(req: Request, res: Response): Promise<any> => {
     try{
+        const { email } = req.body
+        let isExist = await User.findOne({ email: email })
+        if(isExist) {
+            throw { code: 409, message: 'User already exist' }
+        }
         const user = new User<IUser>(req.body)
         await user.save()
         res.status(201).send(user)
     }
-    catch(err){
-        res.status(400).send(err)
+    catch(e:any){
+        res.status(e.code).json({ message: e.message })
+        // console.log(e)
+        // if(e.code != null) {
+            
+        // }
+        // else {
+        //     res.status(500).json({ message: 'Internal Server Error' })
+        // }
     }
 }
 
